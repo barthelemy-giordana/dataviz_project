@@ -5,6 +5,8 @@ date: "6/19/2018"
 output: html_document
 ---
 
+Installing (if needed) and loading packages for the project.
+
 ```{r setup, include=FALSE}
 ## install packages if necessary
 list.of.packages <- c("janitor", "ggplot2", "dplyr", "lubridate", "zoo", "forcats", "ggthemes", "knitr", "rmarkdown")
@@ -41,12 +43,18 @@ pets <- read.csv("data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FA
 
 ## Explore the Data
 
+Exploring the data.
+
 ```{r pet-explore, warning=FALSE} 
 ## Include code here to explore the data 
 ## and answer the questions in the exercise
-str(pets)
+## number of licenses issued
+nrow(pets)
+## how many pet names
 n_distinct(pets$animal_s_name)
+## how many species
 n_distinct(pets$species)
+## name of the species
 count(pets,species)
 ```
 
@@ -55,6 +63,7 @@ count(pets,species)
 ```{r pet-barchart, warning=FALSE} 
 ## visual breakdown of how many of each species 
 ## are included in the dataset
+## barchart
 ggplot(data = pets) +
   geom_bar(aes(x=species))
 ```
@@ -72,7 +81,6 @@ pets %>%
 
 ```{r pet-dog-table, warning=FALSE} 
 ## Table: Most frequent Dog Name
-## ADD CODE!
 pets %>% 
   filter(species == "Dog", animal_s_name != "") %>%
   group_by(animal_s_name) %>% 
@@ -104,18 +112,16 @@ pets %>%
 ```{r pet-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
 pets %>%
-  ## filter cats licenses only
-  filter(species=="Cat") %>%
-  ## group by yearmonth (`ym`)
-  group_by(ym) %>% 
+  ## group by yearmonth (`ym` , `species`)
+  group_by(ym,species) %>% 
   ## count number within each group
-  summarize(n=mean(n())) %>%
-  ggplot(., aes(ym, n)) + 
+  summarize(n=n()) %>%
+  ggplot(., aes(x = ym,y = n, color = species)) + 
   ## geom name for line chart
   geom_line() +
   scale_x_yearmon() + 
   xlab("") + 
-  ylab("Number of Cat licenses")
+  ylab("Number of licenses per species")
 ```
 
 # Part 2: Explanatory Data Analysis
@@ -136,9 +142,11 @@ The data used in this part of the project were dowloaded from [FiveThirtyEight](
 
 ```{r meat-explore, warning=FALSE} 
 ## Include code here to explore the data
-str(steak)
+nrow(steak)
 ## and answer the questions in the exercise
+## number of steak eater
 steak %>% filter(Do.you.eat.steak.=="Yes") %>% nrow()
+## number of steak wellness
 steak %>% filter(How.do.you.like.your.steak.prepared. != "") %>% select(How.do.you.like.your.steak.prepared.) %>% n_distinct()
 
 ```
@@ -165,7 +173,7 @@ pref <- steak %>%
 ```{r meat-visualize, warning=FALSE}
 ## generate the plot 
 p <- ggplot(pref) +
-  ## specify you want to generate a bar chart
+  ## bar chart
   geom_bar(aes(x = steak_pref, y = prop, fill = steak_pref),
                 stat = 'identity', 
                 width = 0.7) + 
@@ -201,11 +209,11 @@ p <- ggplot(pref) +
                 subtitle="From a survey of 432 steak-eating Americans",
                 caption="FiveThirtyEight: Surveymonkey") +
   ## change the theme (use ggthemes)
-  theme_gray() +
+  theme_void() +
   ## fine tune the theme
   theme(axis.text = element_text(size = 14), 
                 title = element_text(size = 16), 
-                #legend.position="none", 
+                legend.position="none", 
                 plot.caption=element_text(size = 12), 
                 panel.grid.major = element_blank(), 
                 panel.grid.minor = element_blank(),
@@ -227,12 +235,29 @@ ggsave(plot = p, filename = "figures/explanatory_figures/steak_R.png", width = 8
 
 ```{r meat-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
+## number of valid respondent
+steak %>% filter(Gender != "" & Do.you.ever.smoke.cigarettes. != "")  %>% nrow()
+## number of smokers/non smokers
+steak %>% filter(Gender != "" & Do.you.ever.smoke.cigarettes. == "Yes")  %>% nrow()
+steak %>% filter(Gender != "" & Do.you.ever.smoke.cigarettes. == "No")  %>% nrow()
 
+g <- steak %>% filter(Gender != "" & Do.you.ever.smoke.cigarettes. != "")  %>%              ggplot()+geom_bar(aes(x=Gender,fill=Do.you.ever.smoke.cigarettes.)) +                     scale_fill_manual(labels=c("Non smokers","Smokers"),values=c("lightblue","grey40")) +
+  ylab("Number of people per gender") +
+  theme_classic() +
+  labs(title="Number of smokers/non smokers per gender", 
+  subtitle="From a survey of 510 Americans",
+  caption="Source : LONGHORN STEAKHOUSE") +
+  theme(
+    legend.title = element_blank()
+  )
+
+g
 ```
 
 ## Save this plot 
 
 ```{r save-meat-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = DIFFERENT_FILENAME)
+setwd("dataviz_project")
+ggsave(plot = g, filename = "figures/explanatory_figures/smokers_R.png")
 ```
